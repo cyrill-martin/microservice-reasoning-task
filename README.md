@@ -1,16 +1,16 @@
 # microservice-reasoning-task
 
-[Description]
+This microservice renders a view to let a user upload input for the EYE reasoner and execute the reasoner.
 
 ## Dependencies
 1. python3
 2. packages: see requirements.txt
 3. EYE reasoner and dependencies described in its installation guide
-	a. EYE: http://sourceforge.net/projects/eulersharp/files/eulersharp/
-	a. swipl
-	b. curl
-	c. carl
-	d. cturtle
+   - EYE: http://sourceforge.net/projects/eulersharp/files/eulersharp/
+   - swipl
+   - curl
+   - carl
+   - cturtle
 
 ## Install and run
 1. ``pip install -r requirements.txt``
