@@ -1,0 +1,78 @@
+<!DOCTYPE html5>
+<html>
+    <head>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/reasoning-task.css') }}">
+        <title>Reasoning</title>
+    </head>
+    <body>
+        <form action="http://localhost:8080/reasoning-task" method="POST" enctype="multipart/form-data">
+            <div id="facts">
+                <span class="inpt">The situational facts</span>
+                <div class="files" id="fact_files">
+                    <textarea name="fact_uploads" id="fact_uploads" placeholder="Upload files" readonly ></textarea>
+                    <input class="upload_btn" type="file" id="upl_facts" name="upl_facts" 
+                    multiple 
+                    onchange="javascript:updateList('upl_facts', 'fact_uploads')">
+                </div>
+                <div class="urls" id="fact_urls">
+                    <textarea name="fact_list" id="fact_list" placeholder="Insert URLs (line by line)"></textarea>
+                </div>
+            </div>
+
+            <div id="rules">
+                <span class="inpt">The background knowledge</span>
+                <div class="files" id="rule_files">
+                    <textarea name="rule_uploads" id="rule_uploads" placeholder="Upload files" readonly></textarea>
+                    <input class="upload_btn" type="file" id="upl_rules" name="upl_rules" 
+                    multiple
+                    onchange="javascript:updateList('upl_rules', 'rule_uploads')">
+                </div>
+                <div class="urls" id="rule_urls">
+                    <textarea name="rule_list" id="rule_list" placeholder="Insert URLs (line by line)"></textarea>
+                </div>
+            </div>
+
+            <div id="query">
+                <span class="inpt">The query</span>
+                <div class="files" id="query_file">
+                    <textarea name="query_upload" id="query_upload" placeholder="Upload file" readonly></textarea>
+                    <input class="upload_btn" type="file" id="upl_query" name="upl_query"
+                    onchange="javascript:updateList('upl_query', 'query_upload')">
+                </div>
+                <div class="urls" id="query_url">
+                    <textarea name="query_list" id="query_list" placeholder="Insert URL"></textarea>
+                </div>
+            </div>
+
+            <div id="parameters">
+                <span class="param">The parameters</span>
+            </div>
+            <input id="reason" type="submit" value="Reason">
+        </form>
+
+        <div id="console">
+            {% if output %}
+            <div id="output">
+{{ output }}
+            </div>
+            {% else %}
+            <div id="output">
+            </div>
+            {% endif %}
+        </div>
+
+        <script>
+            updateList = function(input, output) {
+                var input = document.getElementById(input);
+                var output = document.getElementById(output);
+                var children = "";
+                for (var i = 0; i < input.files.length; ++i) {
+                    children += input.files.item(i).name + "\n";
+                }
+                output.innerHTML = children;
+            }
+        </script>
+
+    </body>
+</html>
