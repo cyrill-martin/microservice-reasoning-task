@@ -36,12 +36,13 @@
             <div id="query">
                 <span class="inpt">The query</span>
                 <div class="files" id="query_file">
-                    <textarea name="query_upload" id="query_upload" placeholder="Upload file" readonly></textarea>
-                    <input class="upload_btn" type="file" id="upl_query" name="upl_query"
-                    onchange="javascript:updateList('upl_query', 'query_upload')">
+                    <textarea name="query_uploads" id="query_uploads" placeholder="Upload files" readonly></textarea>
+                    <input class="upload_btn" type="file" id="upl_queries" name="upl_queries"
+                    multiple
+                    onchange="javascript:updateList('upl_queries', 'query_uploads')">
                 </div>
                 <div class="urls" id="query_url">
-                    <textarea name="query_list" id="query_list" placeholder="Insert URL"></textarea>
+                    <textarea name="query_list" id="query_list" placeholder="Insert URLs (line by line)"></textarea>
                 </div>
             </div>
 
