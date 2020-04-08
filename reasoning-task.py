@@ -188,8 +188,10 @@ def reasoningtask():
             now = datetime.now()
             now_str = "#Execution date %s \r\n" % now.strftime("%Y-%m-%d %H:%M")
 
+            # ["../eye/bin/eye.sh",
+
             process = subprocess.run(
-                ["../eye/bin/eye.sh",
+                ["/opt/eye/bin/eye.sh",
                 "--nope"]
                 + fact_input
                 + rule_input
