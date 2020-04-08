@@ -7,7 +7,7 @@ import requests, json
 from random import random
 from flask_cors import CORS
 from datetime import datetime
-from flask import Flask, request, render_template, flash, redirect, url_for
+from flask import Flask, request, render_template, flash, redirect, url_for, make_response
 from werkzeug.utils import secure_filename
 
 UPLOAD_FOLDER = "uploads"
@@ -183,12 +183,10 @@ def reasoningtask():
             # Enterd uploads directory
             os.chdir("uploads")
             
-
             # Execution date Mi Apr 8 14:52:01 CEST 2020
             now = datetime.now()
             now_str = "#Execution date %s \r\n" % now.strftime("%Y-%m-%d %H:%M")
-
-            # ["../eye/bin/eye.sh",
+            now_str2 = now.strftime("reasoning_%Y%m%d%H%M")
 
             process = subprocess.run(
                 ["/opt/eye/bin/eye.sh",
@@ -207,9 +205,22 @@ def reasoningtask():
                     os.remove(f)
                 # Leave uploads directory
                 os.chdir("..")
+
                 # Return output
-                return render_template(template, output=now_str + process.stdout)
+                response = make_response(now_str + process.stdout)
+                response.headers["Content-type"] = "text/turtle"
+                response.headers["Content-Disposition"] = "inline; filename=%s.ttl" % now_str2
+
+                return response
+
             else:
+                # Delete uploaded files
+                files = glob.glob("*")
+                for f in files:
+                    os.remove(f)
+                # Leave uploads directory
+                os.chdir("..")
+
                 return render_template(template, output=process.stderr)
 
     # GET
