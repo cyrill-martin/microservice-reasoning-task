@@ -3,7 +3,7 @@
 This microservice renders a view to let a user upload input for the EYE reasoner and execute the reasoner.
 
 ## Dependencies
-1. Linux environment
+1. Linux
 2. python3
 3. packages: see requirements.txt
 4. EYE reasoner and dependencies described in its installation guide
