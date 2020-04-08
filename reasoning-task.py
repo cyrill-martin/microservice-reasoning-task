@@ -38,6 +38,9 @@ def reasoningtask():
     # POST
     if request.method == "POST":
 
+        if not os.path.exists(UPLOAD_FOLDER):
+            os.makedirs(UPLOAD_FOLDER)
+
         #############################
         # CHECK FOR FILES AND/OR URLs
         #############################
