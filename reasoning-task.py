@@ -6,6 +6,7 @@ import subprocess
 import requests, json
 from random import random
 from flask_cors import CORS
+from datetime import datetime
 from flask import Flask, request, render_template, flash, redirect, url_for
 from werkzeug.utils import secure_filename
 
@@ -182,23 +183,22 @@ def reasoningtask():
             # Enterd uploads directory
             os.chdir("uploads")
             
-            try:
-                process = subprocess.check_output(
-                    ["../eye/bin/eye.sh",
-                    "--nope"]
-                    + fact_input
-                    + rule_input
-                    + query_input,
-                    stderr=subprocess.STDOUT,
-                    universal_newlines=True)
 
-            # Check for error message
-            except subprocess.CalledProcessError as e:
-                # Leave uploads directory
-                os.chdir("..")
-                # Return error message
-                return render_template(template, output=e.output)
-            else:
+            # Execution date Mi Apr 8 14:52:01 CEST 2020
+            now = datetime.now()
+            now_str = "#Execution date %s \r\n" % now.strftime("%Y-%m-%d %H:%M")
+
+            process = subprocess.run(
+                ["../eye/bin/eye.sh",
+                "--nope"]
+                + fact_input
+                + rule_input
+                + query_input,
+                universal_newlines=True, 
+                stdout=subprocess.PIPE, 
+                stderr=subprocess.PIPE)
+
+            if process.returncode == 0:
                 # If run successfully, delete the uploaded files
                 files = glob.glob("*")
                 for f in files:
@@ -206,7 +206,9 @@ def reasoningtask():
                 # Leave uploads directory
                 os.chdir("..")
                 # Return output
-                return render_template(template, output=process)
+                return render_template(template, output=now_str + process.stdout)
+            else:
+                return render_template(template, output=process.stderr)
 
     # GET
     else:
