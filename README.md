@@ -14,7 +14,7 @@ This microservice renders a view to let a user upload input for the EYE reasoner
    - cturtle
 
 ## Install and run
-1. ``pip install -r requirements.txt``
+1. ``pip3 install -r requirements.txt``
 3. start with ``python3 json-task.py``
 4. Go to http://localhost:8080/reasoning-task
 

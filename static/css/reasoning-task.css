@@ -125,6 +125,10 @@ textarea {
     opacity: 0.3;
 }
 
+#param_list {
+
+}
+
 /* REASON BUTTON */
 #reason {
     position: absolute;
