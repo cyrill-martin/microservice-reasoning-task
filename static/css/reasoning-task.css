@@ -126,7 +126,16 @@ textarea {
 }
 
 #param_list {
-
+    position: absolute;
+    margin: 0;
+    top: 25%;
+    left: 0.6%;
+    height: 65%;
+    width: 98.8%;
+    resize: none;
+    border: none;
+    font-size: 16px;
+    font-family: Dejavu Sans;
 }
 
 /* REASON BUTTON */
