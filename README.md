@@ -15,8 +15,8 @@ This microservice renders a view to let a user upload input for the EYE reasoner
 
 ## Install and run
 1. ``pip3 install -r requirements.txt``
-3. start with ``python3 json-task.py``
-4. Go to http://localhost:8080/reasoning-task
+2. start with ``python3 json-task.py``
+3. Go to http://localhost:8080/reasoning-task
 
 ## Publish on Dockerhub
 See [microservice-template](https://github.com/nie-ine/microservice-template)
