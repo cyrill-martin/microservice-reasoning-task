@@ -31,7 +31,7 @@ def valid_url(url):
     else:
         return False 
 
-@app.route("/reasoning-task", methods=["POST","GET"])
+@app.route("/", methods=["POST","GET"])
 def reasoningtask():
     template = "reasoning-task.html"
 
@@ -47,11 +47,11 @@ def reasoningtask():
 
         check_parts = []
         # Fact parts
-        if "upl_facts" not in request.files:
-            check_parts.append("No fact files part")
+        if "upl_data" not in request.files:
+            check_parts.append("No data files part")
 
-        if "fact_list" not in request.form:
-            check_parts.append("No fact urls part")
+        if "data_list" not in request.form:
+            check_parts.append("No data urls part")
 
         # Rule parts
         if "upl_rules" not in request.files:
@@ -63,17 +63,17 @@ def reasoningtask():
         # Query files are optional
 
         if check_parts:
-            # There are no fact or rule parts
+            # There are no data or rule parts
             return render_template(template, output="\n".join(check_parts))
 
         # Get the file lists
-        fact_files = request.files.getlist("upl_facts")
+        data_files = request.files.getlist("upl_data")
         rule_files = request.files.getlist("upl_rules")
         query_files = request.files.getlist("upl_queries")
 
         # Get the url lists. Split by line (i.e. \r\n) and remove any empty lines (i.e. "")
-        fact_urls = (request.form["fact_list"]).split("\r\n")
-        fact_urls = list(filter(("").__ne__, fact_urls))
+        data_urls = (request.form["data_list"]).split("\r\n")
+        data_urls = list(filter(("").__ne__, data_urls))
 
         rule_urls = (request.form["rule_list"]).split("\r\n")
         rule_urls = list(filter(("").__ne__, rule_urls))
@@ -83,9 +83,9 @@ def reasoningtask():
 
         check_files = []
     
-        if not fact_files[0] and not fact_urls:
+        if not data_files[0] and not data_urls:
             # Fact files or urls are missing
-            check_files.append("No fact files selected or URLs listed")
+            check_files.append("No data files selected or URLs listed")
 
         if not rule_files[0] and not rule_urls:
             # Rule files or urls are missing
@@ -102,30 +102,30 @@ def reasoningtask():
             name_error = "upload .ttl and/or .n3 files only"
             check_urls = []
 
-            fact_input = []
+            data_input = []
             rule_input = []
             query_input = []
 
-            # Handle fact files if present
-            if fact_files[0]:
-                # Handle fact files
-                for file in fact_files:
+            # Handle data files if present
+            if data_files[0]:
+                # Handle data files
+                for file in data_files:
                     if file and allowed_file(file.filename):
                         filename = secure_filename(file.filename)
-                        # Append fact to fact_input
-                        fact_input.append(filename)
+                        # Append data to data_input
+                        data_input.append(filename)
                         file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
                     else:
-                        check_names.append("Fact files: %s" % name_error)
+                        check_names.append("Data files: %s" % name_error)
 
-            # Handle fact urls if present
-            if fact_urls:
-                for url in fact_urls:
+            # Handle data urls if present
+            if data_urls:
+                for url in data_urls:
                     check = valid_url(url)
                     if check:
-                        fact_input.append(url)
+                        data_input.append(url)
                     else:
-                        check_urls.append("Fact urls: %s is invalid" % url)
+                        check_urls.append("Data urls: %s is invalid" % url)
 
             # Handle rule files if present
             if rule_files[0]: 
@@ -194,7 +194,7 @@ def reasoningtask():
             process = subprocess.run(
                 ["/opt/eye/bin/eye.sh",
                 "--nope"]
-                + fact_input
+                + data_input
                 + rule_input
                 + query_input,
                 universal_newlines=True, 
@@ -231,5 +231,5 @@ def reasoningtask():
         return render_template(template)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8080, debug=True)
+    app.run(host="0.0.0.0", port=50001, debug=True)
 

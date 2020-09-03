@@ -62,7 +62,7 @@ textarea {
 }
 
 /*   FACTS   */
-#facts {
+#data {
     margin: 0;
     position: absolute;
     margin: 0;
@@ -72,11 +72,11 @@ textarea {
     height: 50%;
     z-index: -2;
 }
-#fact_files {
+#data_files {
     z-index: -1;
 
 }
-#fact_urls {
+#data_urls {
     z-index: -1;
 }
 
