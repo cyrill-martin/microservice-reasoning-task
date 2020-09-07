@@ -11,18 +11,21 @@ from datetime import datetime
 from flask import Flask, request, render_template, flash, redirect, url_for, make_response, jsonify
 from werkzeug.utils import secure_filename
 
+# App wide variables
 UPLOAD_FOLDER = "uploads"
 TEMPLATE = "reasoning-task.html"
 ALLOWED_EXTENSIONS = {"n3", "ttl"}
 
+# Create app with CORS enabled
 app = Flask(__name__)
 CORS(app)
 
+# Set app configuration
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["TEMPLATE"] = TEMPLATE
-app.secret_key = "super secret key"
+app.secret_key = "super secret key" # ?
 
-# Check filename
+# Function to check filenames
 def allowed_file(filename):
     return "." in filename and \
         filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -34,9 +37,11 @@ def allowed_file(filename):
 #     else:
 #         return False
 
+# Function to check URLs
 def valid_url(url):
     return validators.url(url) # Same as above
 
+# Function to create files based on POSTed JSON data
 def create_input_files(input_list, target_container, error_container, message): 
     for file in input_list: 
         if file and allowed_file(file["file"]):
@@ -50,6 +55,7 @@ def create_input_files(input_list, target_container, error_container, message):
         else:
             error_container.append("{}: upload .ttl and/or .n3 files only".format(message))
 
+# Function to create URL list based on POSTed JSON data 
 def create_input_urls(input_list, target_container, error_container, message):
     for url in input_list:
         if valid_url(url):
@@ -57,6 +63,7 @@ def create_input_urls(input_list, target_container, error_container, message):
         else:
             error_container.append("{}: {} is invalid".format(message, url))
 
+# Function to use the EYE reasoner
 def reason(data_input, rule_input, query_input, **kwargs):
     # Enter uploads directory
     os.chdir(UPLOAD_FOLDER)
@@ -347,4 +354,3 @@ def reasoningtask():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=50001, debug=True)
-
