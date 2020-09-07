@@ -1,6 +1,7 @@
 import os
 import glob
 import socket
+import shutil
 import validators
 import subprocess
 import requests, json
@@ -11,12 +12,14 @@ from flask import Flask, request, render_template, flash, redirect, url_for, mak
 from werkzeug.utils import secure_filename
 
 UPLOAD_FOLDER = "uploads"
+TEMPLATE = "reasoning-task.html"
 ALLOWED_EXTENSIONS = {"n3", "ttl"}
 
 app = Flask(__name__)
 CORS(app)
 
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+app.config["TEMPLATE"] = TEMPLATE
 app.secret_key = "super secret key"
 
 # Check filename
@@ -40,12 +43,10 @@ def create_input_files(input_list, target_container, error_container, message):
             filename = secure_filename(file["file"])
             # Append data to data_input
             target_container.append(filename)
-
-            f = open(os.path.join(app.config["UPLOAD_FOLDER"], filename), "w")
+            # Create and save file with content
+            f = open(os.path.join(UPLOAD_FOLDER, filename), "w")
             f.write(file["content"])
             f.close()
-
-            # file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
         else:
             error_container.append("{}: upload .ttl and/or .n3 files only".format(message))
 
@@ -56,10 +57,53 @@ def create_input_urls(input_list, target_container, error_container, message):
         else:
             error_container.append("{}: {} is invalid".format(message, url))
 
+def reason(data_input, rule_input, query_input, **kwargs):
+    # Enter uploads directory
+    os.chdir(UPLOAD_FOLDER)
+
+    # Execution date Mi Apr 8 14:52:01 CEST 2020
+    now = datetime.now()
+    now_str1 = "#Execution date {} \r\n".format(now.strftime("%Y-%m-%d %H:%M"))
+    now_str2 = now.strftime("reasoning_%Y%m%d%H%M")
+
+    process = subprocess.run(
+        ["/opt/eye/bin/eye.sh",
+        "--nope"]
+        + data_input
+        + rule_input
+        + query_input,
+        universal_newlines=True, 
+        stdout=subprocess.PIPE, 
+        stderr=subprocess.PIPE)
+
+    if process.returncode == 0:
+        # If run successfully
+        # Leave uploads directory
+        os.chdir("..")
+        # Delete upload folder and files
+        shutil.rmtree(UPLOAD_FOLDER)
+
+        # Return output
+        response = make_response(now_str1 + process.stdout)
+        response.headers["Content-type"] = "text/turtle"
+        response.headers["Content-Disposition"] = "inline; filename={}.ttl".format(now_str2)
+
+        return response
+
+    else:
+        # Leave uploads directory
+        os.chdir("..")
+        # Delete upload folder and files
+        shutil.rmtree(UPLOAD_FOLDER)
+
+        if "gui" in kwargs: 
+            return render_template(TEMPLATE, output=process.stderr)
+        else: 
+            return jsonify(process.stderr)
+
 
 @app.route("/", methods=["POST","GET"])
 def reasoningtask():
-    template = "reasoning-task.html"
 
     # POST
     if request.method == "POST":
@@ -131,17 +175,29 @@ def reasoningtask():
             if query_urls:
                 create_input_urls(query_urls, query_input, check_urls, "Query URLs")
 
+            # Exit if there are forbidden files
+            if check_names:
+                shutil.rmtree(UPLOAD_FOLDER)
+                return jsonify("\n".join(check_names))
+
+            # Exit if there are invalid URLs
+            if check_urls:
+                shutil.rmtree(UPLOAD_FOLDER)
+                return jsonify("\n".join(check_urls))
+
+            if query_input:
+                # Add the needed parameter for the reasoner
+                query_input.insert(0, "--query")
+
+            #################
+            # START REASONING
+            #################
+            reasoning = reason(data_input, rule_input, query_input)
+
+            return reasoning
 
 
-
-
-
-
-
-
-            return jsonify(req)
-
-        # if POST if FileObject
+        # if POST is FileObject
         else: 
             #############################
             # CHECK FOR FILES AND/OR URLs
@@ -166,7 +222,7 @@ def reasoningtask():
 
             if check_parts:
                 # There are no data or rule parts
-                return render_template(template, output="\n".join(check_parts))
+                return render_template(TEMPLATE, output="\n".join(check_parts))
 
             # Get the file lists
             data_files = request.files.getlist("upl_data")
@@ -197,7 +253,7 @@ def reasoningtask():
 
             if check_files:
                 # Fact and/or rule files and/or urls are missing
-                return render_template(template, output="\n".join(check_files))
+                return render_template(TEMPLATE, output="\n".join(check_files))
             else:
                 # Facts and rules are present
                 check_names = []
@@ -218,7 +274,7 @@ def reasoningtask():
                             data_input.append(filename)
                             file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
                         else:
-                            check_names.append("Data files: %s" % name_error)
+                            check_names.append("Data files: {}".format(name_error))
 
                 # Handle data urls if present
                 if data_urls:
@@ -226,7 +282,7 @@ def reasoningtask():
                         if valid_url(url):
                             data_input.append(url)
                         else:
-                            check_urls.append("Data urls: %s is invalid" % url)
+                            check_urls.append("Data URLs: {} is invalid".format(url))
 
                 # Handle rule files if present
                 if rule_files[0]: 
@@ -238,7 +294,7 @@ def reasoningtask():
                             rule_input.append(filename)
                             file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
                         else:
-                            check_names.append("Rule files: %s" % name_error)
+                            check_names.append("Rule files: {}".format(name_error))
 
                 # Handle rule urls if present
                 if rule_urls:
@@ -246,7 +302,7 @@ def reasoningtask():
                         if valid_url(url):
                             rule_input.append(url)
                         else:
-                            check_urls.append("Rule urls: %s is invalid" % url)
+                            check_urls.append("Rule urls: {} is invalid".format(url))
 
                 # Handle query files if present
                 if query_files[0]:
@@ -258,7 +314,7 @@ def reasoningtask():
                             query_input.append(filename)
                             file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
                         else:
-                            check_names.append("Query files: %s" % name_error)
+                            check_names.append("Query files: {}".format(name_error))
 
                 # Handle query urls if present
                 if query_urls:
@@ -266,68 +322,28 @@ def reasoningtask():
                         if valid_url(url):
                             query_input.append(url)
                         else:
-                            check_urls.append("Query urls: %s is invalid" % url)
+                            check_urls.append("Query urls: {} is invalid".format(url))
 
                 if check_names:
-                    return render_template(template, output="\n".join(check_names))
+                    return render_template(TEMPLATE, output="\n".join(check_names))
 
                 if check_urls:
-                    return render_template(template, output="\n".join(check_urls))
-
-                #################
-                # START REASONING
-                #################
+                    return render_template(TEMPLATE, output="\n".join(check_urls))
 
                 if query_input:
                     # Add the needed parameter for the reasoner
                     query_input.insert(0, "--query")
 
-                # Enter uploads directory
-                os.chdir("uploads")
-                
-                # Execution date Mi Apr 8 14:52:01 CEST 2020
-                now = datetime.now()
-                now_str = "#Execution date %s \r\n" % now.strftime("%Y-%m-%d %H:%M")
-                now_str2 = now.strftime("reasoning_%Y%m%d%H%M")
+                #################
+                # START REASONING
+                #################
+                reasoning = reason(data_input, rule_input, query_input, gui=True)
 
-                process = subprocess.run(
-                    ["/opt/eye/bin/eye.sh",
-                    "--nope"]
-                    + data_input
-                    + rule_input
-                    + query_input,
-                    universal_newlines=True, 
-                    stdout=subprocess.PIPE, 
-                    stderr=subprocess.PIPE)
-
-                if process.returncode == 0:
-                    # If run successfully, delete the uploaded files
-                    files = glob.glob("*")
-                    for f in files:
-                        os.remove(f)
-                    # Leave uploads directory
-                    os.chdir("..")
-
-                    # Return output
-                    response = make_response(now_str + process.stdout)
-                    response.headers["Content-type"] = "text/turtle"
-                    response.headers["Content-Disposition"] = "inline; filename=%s.ttl" % now_str2
-
-                    return response
-
-                else:
-                    # Delete uploaded files
-                    files = glob.glob("*")
-                    for f in files:
-                        os.remove(f)
-                    # Leave uploads directory
-                    os.chdir("..")
-
-                    return render_template(template, output=process.stderr)
+                return reasoning
 
     # GET
     else:
-        return render_template(template)
+        return render_template(TEMPLATE)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=50001, debug=True)
