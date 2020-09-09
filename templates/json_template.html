@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/reasoning-task.css') }}">
+        <title>Reasoning</title>
+    </head>
+    <body>
+        <form action="http://localhost:50001?gui=json" method="POST" enctype="multipart/form-data">
+            <!-- <input type="hidden" name="gui" value="json" /> -->
+            <div id="data">
+                <span class="inpt">Data</span>
+                <div class="files" id="data_files">
+                    <textarea name="data_uploads" id="data_uploads" placeholder="Upload data files..." readonly ></textarea>
+                    <input class="upload_btn" type="file" id="upl_data" name="upl_data" multiple onchange="javascript:updateFiles('upl_data', 'data_uploads', 'data')">
+                </div>
+                <div class="urls" id="data_urls">
+                    <textarea name="data_list" id="data_list" placeholder="...or you can insert data URLs here (line by line)"></textarea>
+                </div>
+            </div>
+
+            <div id="rules">
+                <span class="inpt">Rules</span>
+                <div class="files" id="rule_files">
+                    <textarea name="rule_uploads" id="rule_uploads" placeholder="Upload rule files..." readonly></textarea>
+                    <input class="upload_btn" type="file" id="upl_rules" name="upl_rules" multiple onchange="javascript:updateFiles('upl_rules', 'rule_uploads', 'rule')">
+                </div>
+                <div class="urls" id="rule_urls">
+                    <textarea name="rule_list" id="rule_list" placeholder="...or you can insert rule URLs here (line by line)"></textarea>
+                </div>
+            </div>
+
+            <div id="query">
+                <span class="inpt">Query</span>
+                <div class="files" id="query_file">
+                    <textarea name="query_uploads" id="query_uploads" placeholder="Upload query files..." readonly></textarea>
+                    <input class="upload_btn" type="file" id="upl_queries" name="upl_queries" multiple onchange="javascript:updateFiles('upl_queries', 'query_uploads', 'query')">
+                </div>
+                <div class="urls" id="query_url">
+                    <textarea name="query_list" id="query_list" placeholder="...or you can insert query URLs here (line by line)"></textarea>
+                </div>
+            </div>
+
+            <div id="parameters">
+                <span class="param">The parameters (currently readonly)</span>
+                <textarea id="param_list" readonly>--nope</textarea>
+            </div>
+            <input id="reason" type="submit" value="Reason">
+        </form>
+
+        <div id="console">
+            {% if output %}
+            <div id="output">
+{{ output }}
+            </div>
+            {% else %}
+            <div id="output">
+            </div>
+            {% endif %}
+        </div>
+
+        <script>
+            // Containers for posting stringyfied files
+            let data_files = [];
+            let rule_files = [];
+            let query_files = [];
+
+            function readFile(file, onLoadCallback) {
+                
+                // Check if the file is an image.
+                // if (file.type && file.type.indexOf('image') === -1) {
+                //     console.log('File is not an image.', file.type, file);
+                //     return;
+                // }
+
+                const reader = new FileReader();
+                reader.onload = onLoadCallback;
+                reader.readAsText(file);
+            };
+
+            updateFiles = function(input, output, target) {
+                const myFiles = document.getElementById(input);
+                const myList = document.getElementById(output);
+                const fileList = myFiles.files;
+
+                console.log(fileList);
+
+                for (var i = 0; i < fileList.length; ++i) {
+                    // Prepare a little object for this file's name and content
+                    let thisFile = {};
+                    if (target === "data") {
+                        thisFile["file"] = fileList[i]["name"];
+                        // data_files.push({"file": fileList[i]["name"], "content": "..."});
+                        
+                        // The readFile function which takes another function for the second parameter!
+                        readFile(fileList[i], function(e) {
+                            thisFile["content"] = e.target.result;
+                        });
+                        
+                        data_files.push(thisFile);
+
+                    } else if (target === "rule") {
+                        thisFile["file"] = fileList[i]["name"];
+
+                        readFile(fileList[i], function(e) {
+                            thisFile["content"] = e.target.result;
+                        });
+
+                        rule_files.push(thisFile);
+                    } else {
+                        thisFile["file"] = fileList[i]["name"];
+
+                        readFile(fileList[i], function(e) {
+                            thisFile["content"] = e.target.result;
+                        });
+
+                        query_files.push(thisFile);
+                    }  
+                };
+
+                if (target === "data") {
+                    myList.innerHTML = data_files.map(object => ([object.file])).join("\n");
+                } else if (target === "rule") {
+                    myList.innerHTML = rule_files.map(object => ([object.file])).join("\n");
+                } else {
+                    myList.innerHTML = query_files.map(object => ([object.file])).join("\n");
+                }
+
+                console.log("Data Object:");
+                console.log(data_files);
+                console.log("Rule Object;");
+                console.log(rule_files);
+                console.log("Query Object:");
+                console.log(query_files);
+
+                const data = {
+                    "data": {
+                        "files": data_files, 
+                        "urls": []
+                    }, 
+                    "rules": {
+                        "files": rule_files, 
+                        "urls": []
+                    }, 
+                    "queries": {
+                        "files": query_files, 
+                        "urls": []
+                    }
+                };
+
+                // Reason button
+                $(document).ready(function() {
+                    $("#reason").on("click", function() {
+
+                        $.ajax({
+                            url: "http://localhost:50001",
+                            type: "POST",
+                            contentType: "application/json; charset=utf-8",
+                            dataType: "json",
+                            data: JSON.stringify(data)
+                            // success: function(response) {
+                            //     console.log("Success:")
+                            //     // console.log(response)
+                            // },
+                            // error: function(error) {
+                            //     console.log("Error:")
+                            //     console.log(error);
+                            // }
+                        });
+                    });
+                });
+   
+            };
+        </script>
+
+    </body>
+</html>

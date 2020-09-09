@@ -1,4 +1,4 @@
-<!DOCTYPE html5>
+<!DOCTYPE html>
 <html>
     <head>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
@@ -6,14 +6,13 @@
         <title>Reasoning</title>
     </head>
     <body>
-        <form action="http://localhost:50001" method="POST" enctype="multipart/form-data">
+        <form action="http://localhost:50001?gui=form" method="POST" enctype="multipart/form-data">
+            <!-- <input type="hidden" name="gui" value="form" /> -->
             <div id="data">
                 <span class="inpt">Data</span>
                 <div class="files" id="data_files">
                     <textarea name="data_uploads" id="data_uploads" placeholder="Upload data files..." readonly ></textarea>
-                    <input class="upload_btn" type="file" id="upl_data" name="upl_data" 
-                    multiple 
-                    onchange="javascript:updateList('upl_data', 'data_uploads')">
+                    <input class="upload_btn" type="file" id="upl_data" name="upl_data" multiple onchange="javascript:updateList('upl_data', 'data_uploads')">
                 </div>
                 <div class="urls" id="data_urls">
                     <textarea name="data_list" id="data_list" placeholder="...or you can insert data URLs here (line by line)"></textarea>
@@ -24,9 +23,7 @@
                 <span class="inpt">Rules</span>
                 <div class="files" id="rule_files">
                     <textarea name="rule_uploads" id="rule_uploads" placeholder="Upload rule files..." readonly></textarea>
-                    <input class="upload_btn" type="file" id="upl_rules" name="upl_rules" 
-                    multiple
-                    onchange="javascript:updateList('upl_rules', 'rule_uploads')">
+                    <input class="upload_btn" type="file" id="upl_rules" name="upl_rules" multiple onchange="javascript:updateList('upl_rules', 'rule_uploads')">
                 </div>
                 <div class="urls" id="rule_urls">
                     <textarea name="rule_list" id="rule_list" placeholder="...or you can insert rule URLs here (line by line)"></textarea>
@@ -37,9 +34,7 @@
                 <span class="inpt">Query</span>
                 <div class="files" id="query_file">
                     <textarea name="query_uploads" id="query_uploads" placeholder="Upload query files..." readonly></textarea>
-                    <input class="upload_btn" type="file" id="upl_queries" name="upl_queries"
-                    multiple
-                    onchange="javascript:updateList('upl_queries', 'query_uploads')">
+                    <input class="upload_btn" type="file" id="upl_queries" name="upl_queries" multiple onchange="javascript:updateList('upl_queries', 'query_uploads')">
                 </div>
                 <div class="urls" id="query_url">
                     <textarea name="query_list" id="query_list" placeholder="...or you can insert query URLs here (line by line)"></textarea>

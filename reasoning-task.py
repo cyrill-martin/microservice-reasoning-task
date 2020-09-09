@@ -8,12 +8,13 @@ import requests, json
 from random import random
 from flask_cors import CORS
 from datetime import datetime
-from flask import Flask, request, render_template, flash, redirect, url_for, make_response, jsonify
 from werkzeug.utils import secure_filename
+from flask import Flask, request, render_template, flash, redirect, url_for, make_response, jsonify
 
 # App wide variables
 UPLOAD_FOLDER = "uploads"
-TEMPLATE = "reasoning-task.html"
+JSON_TEMPLATE = "json_template.html"
+FORM_TEMPLATE = "form_template.html"
 ALLOWED_EXTENSIONS = {"n3", "ttl"}
 
 # Create app with CORS enabled
@@ -22,7 +23,8 @@ CORS(app)
 
 # Set app configuration
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-app.config["TEMPLATE"] = TEMPLATE
+app.config["JSON_TEMPLATE"] = JSON_TEMPLATE
+app.config["FORM_TEMPLATE"] = FORM_TEMPLATE
 app.secret_key = "super secret key" # ?
 
 # Function to check filenames
@@ -39,12 +41,14 @@ def allowed_file(filename):
 
 # Function to check URLs
 def valid_url(url):
-    return validators.url(url) # Same as above
+    return validators.url(url) # Same as above: returns True if valid :)
 
-# Function to create files based on POSTed JSON data
-def create_input_files(input_list, target_container, error_container, message): 
-    for file in input_list: 
+# Function to process 'files' POSTed as JSON data
+def create_input_files(input_list, target_container, error_container, message_part): 
+    for file in input_list:
+        # Check if file extension is allowed (either .ttl of .n3)
         if file and allowed_file(file["file"]):
+            # Allow secure filenames only
             filename = secure_filename(file["file"])
             # Append data to data_input
             target_container.append(filename)
@@ -53,7 +57,18 @@ def create_input_files(input_list, target_container, error_container, message):
             f.write(file["content"])
             f.close()
         else:
-            error_container.append("{}: upload .ttl and/or .n3 files only".format(message))
+            error_container.append("{}: upload .ttl and/or .n3 files only".format(message_part))
+
+# Function to process files POSTed in FileList
+def take_input_files(input_list, target_container, error_container, message_part): 
+    for file in input_list:
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            # Append data to data_input
+            target_container.append(filename)
+            file.save(os.path.join(UPLOAD_FOLDER, filename))
+        else:
+            error_container.append("{}: upload .ttl and/or .n3 files only".format(message_part))
 
 # Function to create URL list based on POSTed JSON data 
 def create_input_urls(input_list, target_container, error_container, message):
@@ -68,11 +83,12 @@ def reason(data_input, rule_input, query_input, **kwargs):
     # Enter uploads directory
     os.chdir(UPLOAD_FOLDER)
 
-    # Execution date Mi Apr 8 14:52:01 CEST 2020
+    # Create date strings for final reasoning output file
     now = datetime.now()
     now_str1 = "#Execution date {} \r\n".format(now.strftime("%Y-%m-%d %H:%M"))
     now_str2 = now.strftime("reasoning_%Y%m%d%H%M")
 
+    # Reason with the EYE reasoner
     process = subprocess.run(
         ["/opt/eye/bin/eye.sh",
         "--nope"]
@@ -83,8 +99,8 @@ def reason(data_input, rule_input, query_input, **kwargs):
         stdout=subprocess.PIPE, 
         stderr=subprocess.PIPE)
 
+    # If run successfully
     if process.returncode == 0:
-        # If run successfully
         # Leave uploads directory
         os.chdir("..")
         # Delete upload folder and files
@@ -95,6 +111,7 @@ def reason(data_input, rule_input, query_input, **kwargs):
         response.headers["Content-type"] = "text/turtle"
         response.headers["Content-Disposition"] = "inline; filename={}.ttl".format(now_str2)
 
+        # Return results as turtle file
         return response
 
     else:
@@ -103,7 +120,9 @@ def reason(data_input, rule_input, query_input, **kwargs):
         # Delete upload folder and files
         shutil.rmtree(UPLOAD_FOLDER)
 
-        if "gui" in kwargs: 
+        # return process.stderr
+
+        if kwargs["gui"] == True: 
             return render_template(TEMPLATE, output=process.stderr)
         else: 
             return jsonify(process.stderr)
@@ -114,7 +133,19 @@ def reasoningtask():
 
     # POST
     if request.method == "POST":
+        
+        gui = False
 
+        if "gui" in request.args:
+
+            gui = True
+
+            if request.args.get("gui") == "form":
+                TEMPLATE = FORM_TEMPLATE
+
+            if request.args.get("gui") == "json":
+                TEMPLATE = JSON_TEMPLATE
+        
         if not os.path.exists(UPLOAD_FOLDER):
             os.makedirs(UPLOAD_FOLDER)
 
@@ -127,16 +158,18 @@ def reasoningtask():
             # List for error messages
             check_parts = []
 
+            # Check JSON structure !!!
+
             # Check if there are data files or URLs
             if not req["data"]["files"] and not req["data"]["urls"]: 
-                check_parts.append("No data files selected or URLs listed")
+                check_parts.append("No data files or URLs posted")
             else:
                 data_files = req["data"]["files"]
                 data_urls = req["data"]["urls"]
 
             # Check if there are rule files or URLs
             if not req["rules"]["files"] and not req["rules"]["urls"]: 
-                check_parts.append("No rule files selected or URLs listed")
+                check_parts.append("No rule files or URLs posted")
             else:
                 rule_files = req["rules"]["files"]
                 rule_urls = req["rules"]["urls"]
@@ -147,7 +180,10 @@ def reasoningtask():
 
             # If errors, return message(s)
             if check_parts:
-                return jsonify("\n".join(check_parts))
+                if gui == True:
+                    return render_template(TEMPLATE, output="\n".join(check_parts))
+                else:  
+                    return jsonify("\n".join(check_parts))
 
             # Containers for input files
             data_input = []
@@ -185,51 +221,55 @@ def reasoningtask():
             # Exit if there are forbidden files
             if check_names:
                 shutil.rmtree(UPLOAD_FOLDER)
-                return jsonify("\n".join(check_names))
+                if gui == True: 
+                    return render_template(TEMPLATE, output="\n".join(check_names))
+                else: 
+                    return jsonify("\n".join(check_names))
 
             # Exit if there are invalid URLs
             if check_urls:
                 shutil.rmtree(UPLOAD_FOLDER)
-                return jsonify("\n".join(check_urls))
+                if gui == True: 
+                    return render_template(TEMPLATE, output="\n".join(check_urls))
+                else: 
+                    return jsonify("\n".join(check_urls))
 
             if query_input:
                 # Add the needed parameter for the reasoner
                 query_input.insert(0, "--query")
 
-            #################
-            # START REASONING
-            #################
-            reasoning = reason(data_input, rule_input, query_input)
-
+            ###################
+            # START REASONING #
+            ###################
+            reasoning = reason(data_input, rule_input, query_input, gui=gui)
             return reasoning
 
-
-        # if POST is FileObject
+        # if POST is FileList
         else: 
-            #############################
-            # CHECK FOR FILES AND/OR URLs
-            #############################
 
             check_parts = []
             # Fact parts
             if "upl_data" not in request.files:
-                check_parts.append("No data files part")
+                check_parts.append("No data files form part")
 
             if "data_list" not in request.form:
-                check_parts.append("No data urls part")
+                check_parts.append("No data urls form part")
 
             # Rule parts
             if "upl_rules" not in request.files:
-                check_parts.append("No rule files part")
+                check_parts.append("No rule files form part")
 
             if "rule_list" not in request.form:
-                check_parts.append("No rule urls part")
+                check_parts.append("No rule urls form part")
 
             # Query files are optional
 
             if check_parts:
                 # There are no data or rule parts
-                return render_template(TEMPLATE, output="\n".join(check_parts))
+                if gui == True: 
+                    return render_template(FORM_TEMPLATE, output="\n".join(check_parts))
+                else: 
+                    return "\n".join(check_parts)
 
             # Get the file lists
             data_files = request.files.getlist("upl_data")
@@ -260,7 +300,10 @@ def reasoningtask():
 
             if check_files:
                 # Fact and/or rule files and/or urls are missing
-                return render_template(TEMPLATE, output="\n".join(check_files))
+                if gui == True: 
+                    return render_template(FORM_TEMPLATE, output="\n".join(check_files))
+                else: 
+                    return "\n".join(check_files)
             else:
                 # Facts and rules are present
                 check_names = []
@@ -273,84 +316,59 @@ def reasoningtask():
 
                 # Handle data files if present
                 if data_files[0]:
-                    # Handle data files
-                    for file in data_files:
-                        if file and allowed_file(file.filename):
-                            filename = secure_filename(file.filename)
-                            # Append data to data_input
-                            data_input.append(filename)
-                            file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
-                        else:
-                            check_names.append("Data files: {}".format(name_error))
+                    take_input_files(data_files, data_input, check_names, "Data files") 
 
                 # Handle data urls if present
                 if data_urls:
-                    for url in data_urls:
-                        if valid_url(url):
-                            data_input.append(url)
-                        else:
-                            check_urls.append("Data URLs: {} is invalid".format(url))
+                    create_input_urls(data_urls, data_input, check_urls, "Data URLs")
 
                 # Handle rule files if present
                 if rule_files[0]: 
-                    # Handle rule files
-                    for file in rule_files:
-                        if file and allowed_file(file.filename):
-                            filename = secure_filename(file.filename)
-                            # Append rule to rule_input
-                            rule_input.append(filename)
-                            file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
-                        else:
-                            check_names.append("Rule files: {}".format(name_error))
+                    take_input_files(rule_files, rule_input, check_names, "Rule files")
 
                 # Handle rule urls if present
                 if rule_urls:
-                    for url in rule_urls:
-                        if valid_url(url):
-                            rule_input.append(url)
-                        else:
-                            check_urls.append("Rule urls: {} is invalid".format(url))
+                    create_input_urls(rule_urls, rule_input, check_urls, "Rule URLs")
 
                 # Handle query files if present
                 if query_files[0]:
-                    # Handle query files
-                    for file in query_files:
-                        if file and allowed_file(file.filename):
-                            filename = secure_filename(file.filename)
-                            # Append query to query_input
-                            query_input.append(filename)
-                            file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
-                        else:
-                            check_names.append("Query files: {}".format(name_error))
+                    take_input_files(query_files, query_input, check_names, "Query files")
 
                 # Handle query urls if present
                 if query_urls:
-                    for url in query_urls:
-                        if valid_url(url):
-                            query_input.append(url)
-                        else:
-                            check_urls.append("Query urls: {} is invalid".format(url))
+                    create_input_urls(query_urls, query_input, check_urls, "Query URLs")
 
+                # Exit if there are forbidden files
                 if check_names:
-                    return render_template(TEMPLATE, output="\n".join(check_names))
+                    if gui == True: 
+                        return render_template(FORM_TEMPLATE, output="\n".join(check_names))
+                    else: 
+                        return "\n".join(check_names)
 
+                # Exit if there are invalid URLs
                 if check_urls:
-                    return render_template(TEMPLATE, output="\n".join(check_urls))
+                    if gui == True: 
+                        return render_template(FORM_TEMPLATE, output="\n".join(check_urls))
+                    else:
+                        return "\n".join(check_names)
 
                 if query_input:
                     # Add the needed parameter for the reasoner
                     query_input.insert(0, "--query")
 
-                #################
-                # START REASONING
-                #################
-                reasoning = reason(data_input, rule_input, query_input, gui=True)
-
+                ###################
+                # START REASONING #
+                ###################
+                reasoning = reason(data_input, rule_input, query_input)
                 return reasoning
 
     # GET
     else:
-        return render_template(TEMPLATE)
+        gui_type = request.args.get("gui", default = "form", type = str)
+        if gui_type == "json":
+            return render_template(JSON_TEMPLATE)
+        else: 
+            return render_template(FORM_TEMPLATE)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=50001, debug=True)
