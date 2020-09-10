@@ -178,10 +178,12 @@ def reasoningtask():
             query_files = req["queries"]["files"]
             query_urls = req["queries"]["urls"]
 
+
             # If errors, return message(s)
             if check_parts:
                 if gui == True:
-                    return render_template(TEMPLATE, output="\n".join(check_parts))
+                    return "\n".join(check_parts)
+                    # return render_template(TEMPLATE, output="\n".join(check_parts))
                 else:  
                     return jsonify("\n".join(check_parts))
 
@@ -359,7 +361,7 @@ def reasoningtask():
                 ###################
                 # START REASONING #
                 ###################
-                reasoning = reason(data_input, rule_input, query_input)
+                reasoning = reason(data_input, rule_input, query_input, gui=gui)
                 return reasoning
 
     # GET

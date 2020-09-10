@@ -6,12 +6,12 @@
         <title>Reasoning</title>
     </head>
     <body>
-        <form action="http://localhost:50001?gui=json" method="POST" enctype="multipart/form-data">
+        <form>
             <!-- <input type="hidden" name="gui" value="json" /> -->
             <div id="data">
                 <span class="inpt">Data</span>
                 <div class="files" id="data_files">
-                    <textarea name="data_uploads" id="data_uploads" placeholder="Upload data files..." readonly ></textarea>
+                    <div class="uploaded" name="data_uploads" id="data_uploads">Upload data files...</div>
                     <input class="upload_btn" type="file" id="upl_data" name="upl_data" multiple onchange="javascript:updateFiles('upl_data', 'data_uploads', 'data')">
                 </div>
                 <div class="urls" id="data_urls">
@@ -22,7 +22,7 @@
             <div id="rules">
                 <span class="inpt">Rules</span>
                 <div class="files" id="rule_files">
-                    <textarea name="rule_uploads" id="rule_uploads" placeholder="Upload rule files..." readonly></textarea>
+                    <div class="uploaded" name="rule_uploads" id="rule_uploads">Upload rule files...</div>
                     <input class="upload_btn" type="file" id="upl_rules" name="upl_rules" multiple onchange="javascript:updateFiles('upl_rules', 'rule_uploads', 'rule')">
                 </div>
                 <div class="urls" id="rule_urls">
@@ -33,7 +33,7 @@
             <div id="query">
                 <span class="inpt">Query</span>
                 <div class="files" id="query_file">
-                    <textarea name="query_uploads" id="query_uploads" placeholder="Upload query files..." readonly></textarea>
+                    <div class="uploaded" name="query_uploads" id="query_uploads">Upload query files...</div>
                     <input class="upload_btn" type="file" id="upl_queries" name="upl_queries" multiple onchange="javascript:updateFiles('upl_queries', 'query_uploads', 'query')">
                 </div>
                 <div class="urls" id="query_url">
@@ -45,7 +45,8 @@
                 <span class="param">The parameters (currently readonly)</span>
                 <textarea id="param_list" readonly>--nope</textarea>
             </div>
-            <input id="reason" type="submit" value="Reason">
+            <input id="reason" value="Reason">
+            <div id="reasoning"><img id="spinner" src="{{ url_for('static', filename='images/tenor.gif') }}"></div>
         </form>
 
         <div id="console">
@@ -61,9 +62,9 @@
 
         <script>
             // Containers for posting stringyfied files
-            let data_files = [];
-            let rule_files = [];
-            let query_files = [];
+            var data_files = [];
+            var rule_files = [];
+            var query_files = [];
 
             function readFile(file, onLoadCallback) {
                 
@@ -78,12 +79,12 @@
                 reader.readAsText(file);
             };
 
-            updateFiles = function(input, output, target) {
+            function updateFiles(input, output, target) {
                 const myFiles = document.getElementById(input);
                 const myList = document.getElementById(output);
                 const fileList = myFiles.files;
 
-                console.log(fileList);
+                // console.log(fileList);
 
                 for (var i = 0; i < fileList.length; ++i) {
                     // Prepare a little object for this file's name and content
@@ -119,58 +120,100 @@
                 };
 
                 if (target === "data") {
-                    myList.innerHTML = data_files.map(object => ([object.file])).join("\n");
+                    myList.innerHTML = data_files.map((object, index) => ([
+                        "<div class='file_chip'" + "id='dat_" + index + "'>"
+                        + object.file 
+                        + "<span class='remove_btn'>&times;</span>"
+                        + "</div>"])).join("");
                 } else if (target === "rule") {
-                    myList.innerHTML = rule_files.map(object => ([object.file])).join("\n");
+                    myList.innerHTML = rule_files.map((object, index) => ([
+                        "<div class='file_chip'" + "id='rle_" + index + "'>" 
+                        + object.file 
+                        + "<span class='remove_btn'>&times;</span>"
+                        + "</div>"])).join("");
                 } else {
-                    myList.innerHTML = query_files.map(object => ([object.file])).join("\n");
+                     myList.innerHTML = query_files.map((object, index) => ([
+                        "<div class='file_chip'" + "id='qry_" + index + "'>" 
+                        + object.file 
+                        + "<span class='remove_btn'>&times;</span>"
+                        + "</div>"])).join("");
                 }
 
-                console.log("Data Object:");
                 console.log(data_files);
-                console.log("Rule Object;");
                 console.log(rule_files);
-                console.log("Query Object:");
                 console.log(query_files);
 
-                const data = {
-                    "data": {
-                        "files": data_files, 
-                        "urls": []
-                    }, 
-                    "rules": {
-                        "files": rule_files, 
-                        "urls": []
-                    }, 
-                    "queries": {
-                        "files": query_files, 
-                        "urls": []
+                $(".remove_btn").click(function() {
+                    console.log("found the button");
+                    let type = $(this).parent().attr("id").slice(0,3);
+                    let index = $(this).parent().attr("id").slice(4,99);
+
+                    console.log(type + "_" + index);
+
+                    if (type === "dat") {
+                        data_files.splice(index, 1);
+                    } else if (type == "rle") {
+                        rule_files.splice(index, 1);
+                    } else {
+                        query_files.splice(index, 1);
                     }
-                };
 
-                // Reason button
-                $(document).ready(function() {
-                    $("#reason").on("click", function() {
+                    console.log(data_files);
+                    console.log(rule_files);
+                    console.log(query_files);
 
-                        $.ajax({
-                            url: "http://localhost:50001",
-                            type: "POST",
-                            contentType: "application/json; charset=utf-8",
-                            dataType: "json",
-                            data: JSON.stringify(data)
-                            // success: function(response) {
-                            //     console.log("Success:")
-                            //     // console.log(response)
-                            // },
-                            // error: function(error) {
-                            //     console.log("Error:")
-                            //     console.log(error);
-                            // }
-                        });
-                    });
+                    $("#" + type + "_" + index).remove();
+
                 });
-   
+
             };
+
+            // Reason button
+            $(document).ready(function() {
+                $("#reason").click(function() {
+
+                    $.ajax({
+                        url: "http://localhost:50001?gui=json",
+                        type: "POST",
+                        contentType: "application/json; charset=utf-8",
+                        // dataType: "text/turtle",
+                        data: JSON.stringify({
+                            "data": {
+                                "files": data_files, 
+                                "urls": []
+                            }, 
+                            "rules": {
+                                "files": rule_files, 
+                                "urls": []
+                            }, 
+                            "queries": {
+                                "files": query_files, 
+                                "urls": []
+                            }
+                        }),
+                        success: function(response) {
+                            console.log("Success:")
+                            console.log(response)
+                            $("#output").text(response);
+                        },
+                        error: function(error) {
+                            console.log("Error:")
+                            console.log(error);
+                        }
+                    });
+
+
+                });
+            });
+
+            $(document).ready(function () {
+                $(document).ajaxStart(function () {
+                    $("#reasoning").show();
+                }).ajaxStop(function () {
+                    $("#reasoning").hide();
+                });
+            });
+
         </script>
 
     </body>

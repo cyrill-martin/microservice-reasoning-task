@@ -53,6 +53,43 @@ textarea {
     font-family: Dejavu Sans;
 }
 
+.uploaded {
+    position: absolute;
+    margin: 0;
+    padding: 2px;
+    top: 15%;
+    left: 2%;
+    height: 65%;
+    width: 96%;
+    resize: none;
+    border: none;
+    font-size: 16px;
+    font-family: Dejavu Sans;
+    background-color: white;
+    z-index: 99;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.file_chip {
+  padding: 5px;
+  margin-bottom: 5px;
+  border-radius: 25px;
+  background-color: #E3D872;
+}
+
+.remove_btn {
+    position: relative;
+    float: right;
+    cursor: pointer;
+    padding-right: 10px;
+    color: #888;
+}
+
+.remove_btn:hover {
+  color: #000;
+}
+
 .upload_btn{
     position: absolute;
     margin: 0;
@@ -146,8 +183,23 @@ textarea {
     cursor: pointer;
     background-color: #E3D872;
     border: none;
-    padding: 10px 32px;
+    padding: 10px;
     font-size: 16px;
+    width: 100px;
+    text-align: center;
+}
+
+#reasoning {
+    position: absolute;
+    left: 180px;
+    top: 74.5%;
+    background-color: white;
+    display: none;
+}
+
+#spinner {
+    width: 50px;
+    height: 50px;
 }
 
 /*   CONSOLE   */
