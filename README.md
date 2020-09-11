@@ -2,6 +2,8 @@
 
 This microservice is part of the microservice pipline in [inseri](https://github.com/nie-ine/inseri). The service provides the possibility to conduct machine reasoning using the [EYE reasoner](http://sourceforge.net/projects/eulersharp/files/eulersharp/).
 
+The microservice accepts both a FileList object sent through an HTML form or JSON data of the files contents. 
+
 ## Run and Develop Locally
 
 ### Dependencies
@@ -19,17 +21,30 @@ This microservice is part of the microservice pipline in [inseri](https://github
 
 1. ``pip3 install -r requirements.txt``
 2. start with ``python3 reasoning-task.py``
-3. Go to http://localhost:50001
+1. POST FileList object or JSON to http://localhost:50001 (see below)
+3. Or use the GUI to create the POST by opening:  
+   - http://localhost:50001 for sending a FileList object
+   - http://localhost:50001?gui=json for sending JSON data
 
 ## Run with Docker
 
 1. Build the image: ``[sudo] docker build -t nieine/microservice-reasoning-task .``
 1. Run the container: ``[sudo] docker run -p 50001:50001 nieine/microservice-reasoning-task``
-1. Go to http://localhost:50001
+1. POST FileList object or JSON to http://localhost:50001 (see below)
+3. Or use the GUI to create the POST by opening:  
+   - http://localhost:50001 for sending a FileList object
+   - http://localhost:50001?gui=json for sending JSON data
 
 ## Call the Service in a RESTful Way
 
-If the service is running, you can POST a body with JSON data from any application. 
+If the service is running, you can POST either a FileList object or JSON. Either way, you will receive a turtle file as a response. 
+
+### FileList
+
+Currently, please use the GUI interface and the developer tools to get an idea on how the FileList looks like. 
+
+
+### JSON
 
 Body:
 ```
