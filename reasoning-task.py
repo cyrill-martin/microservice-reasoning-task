@@ -183,7 +183,6 @@ def reasoningtask():
             if check_parts:
                 if gui == True:
                     return "\n".join(check_parts)
-                    # return render_template(TEMPLATE, output="\n".join(check_parts))
                 else:  
                     return jsonify("\n".join(check_parts))
 
@@ -224,7 +223,7 @@ def reasoningtask():
             if check_names:
                 shutil.rmtree(UPLOAD_FOLDER)
                 if gui == True: 
-                    return render_template(TEMPLATE, output="\n".join(check_names))
+                    return "\n".join(check_names)
                 else: 
                     return jsonify("\n".join(check_names))
 
@@ -232,7 +231,7 @@ def reasoningtask():
             if check_urls:
                 shutil.rmtree(UPLOAD_FOLDER)
                 if gui == True: 
-                    return render_template(TEMPLATE, output="\n".join(check_urls))
+                    return "\n".join(check_urls)
                 else: 
                     return jsonify("\n".join(check_urls))
 

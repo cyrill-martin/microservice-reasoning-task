@@ -191,18 +191,36 @@
                                 "urls": []
                             }
                         }),
-                        success: function(response) {
-                            console.log("Success:")
-                            console.log(response)
-                            $("#output").text(response);
+                        xhrFields: {
+                            responseType: "blob" // ???
                         },
+                        // Trick to initiate Save as dialog
+                        success: function(res) {
+                            var a = document.createElement("a");
+                            var url = window.URL.createObjectURL(res);
+                            var now = new Date();
+                            var timeString = now.getFullYear().toString() 
+                                + (now.getMonth() +1).toString() 
+                                + now.getDate().toString() 
+                                + now.getHours().toString() 
+                                + now.getMinutes().toString(); 
+                            a.href = url;
+                            a.download = "reasoning_" + timeString + ".ttl";
+                            document.body.append(a);
+                            a.click();
+                            a.remove();
+                            window.URL.revokeObjectURL(url);
+                        },
+                        // success: function(response) {
+                        //     console.log("Success:")
+                        //     console.log(response)
+                        //     $("#output").text(response);
+                        // },
                         error: function(error) {
                             console.log("Error:")
                             console.log(error);
                         }
                     });
-
-
                 });
             });
 
