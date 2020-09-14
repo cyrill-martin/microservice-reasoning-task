@@ -149,7 +149,9 @@ def reasoningtask():
         if not os.path.exists(UPLOAD_FOLDER):
             os.makedirs(UPLOAD_FOLDER)
 
-        # if POST is JSON
+        #######################################
+        ########### if POST is JSON ###########
+        #######################################
         if request.is_json:
 
             # Take the posted json data
@@ -245,7 +247,9 @@ def reasoningtask():
             reasoning = reason(data_input, rule_input, query_input, gui=gui)
             return reasoning
 
-        # if POST is FileList
+        #######################################
+        ######### if POST is FileList #########
+        #######################################
         else: 
 
             check_parts = []

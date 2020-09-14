@@ -63,8 +63,13 @@
         <script>
             // Containers for posting stringyfied files
             var data_files = [];
+            var data_list = [];
+
             var rule_files = [];
+            var rule_list = [];
+
             var query_files = [];
+            var query_list = [];
 
             function readFile(file, onLoadCallback) {
                 
@@ -91,7 +96,6 @@
                     let thisFile = {};
                     if (target === "data") {
                         thisFile["file"] = fileList[i]["name"];
-                        // data_files.push({"file": fileList[i]["name"], "content": "..."});
                         
                         // The readFile function which takes another function for the second parameter!
                         readFile(fileList[i], function(e) {
@@ -144,7 +148,6 @@
                 console.log(query_files);
 
                 $(".remove_btn").click(function() {
-                    console.log("found the button");
                     let type = $(this).parent().attr("id").slice(0,3);
                     let index = $(this).parent().attr("id").slice(4,99);
 
@@ -172,55 +175,81 @@
             $(document).ready(function() {
                 $("#reason").click(function() {
 
-                    $.ajax({
-                        url: "http://localhost:50001?gui=json",
-                        type: "POST",
-                        contentType: "application/json; charset=utf-8",
-                        // dataType: "text/turtle",
-                        data: JSON.stringify({
-                            "data": {
-                                "files": data_files, 
-                                "urls": []
-                            }, 
-                            "rules": {
-                                "files": rule_files, 
-                                "urls": []
-                            }, 
-                            "queries": {
-                                "files": query_files, 
-                                "urls": []
-                            }
-                        }),
-                        xhrFields: {
-                            responseType: "blob" // ???
-                        },
-                        // Trick to initiate Save as dialog
-                        success: function(res) {
-                            var a = document.createElement("a");
-                            var url = window.URL.createObjectURL(res);
-                            var now = new Date();
-                            var timeString = now.getFullYear().toString() 
-                                + (now.getMonth() +1).toString() 
-                                + now.getDate().toString() 
-                                + now.getHours().toString() 
-                                + now.getMinutes().toString(); 
-                            a.href = url;
-                            a.download = "reasoning_" + timeString + ".ttl";
-                            document.body.append(a);
-                            a.click();
-                            a.remove();
-                            window.URL.revokeObjectURL(url);
-                        },
-                        // success: function(response) {
-                        //     console.log("Success:")
-                        //     console.log(response)
-                        //     $("#output").text(response);
-                        // },
-                        error: function(error) {
-                            console.log("Error:")
-                            console.log(error);
-                        }
-                    });
+                    if  (!(!$.trim($("#data_list").val()))) { // textarea is not empty or does not contain only white-space
+                        data_list = $("#data_list").val().split(/\r?\n/);
+                    } 
+
+                    if (!(!$.trim($("#rule_list").val()))) {
+                        rule_list = $("#rule_list").val().split(/\r?\n/);
+                    }
+
+                    if (!(!$.trim($("#query_list").val()))) {
+                        query_list = $("#query_list").val().split(/\r?\n/);
+                    }
+
+                    // You will have to do all the form validation here, not only at the service's end!
+                        // --> Since the response is always a blob written to a file !!!
+                        // Keep the validation at the service though (--> it's an API)
+
+                    // For now, just check all the arrays and only reason
+                    if (data_files.concat(data_list).length > 0 
+                            && rule_files.concat(rule_list).length > 0
+                            && query_files.concat(query_list).length > 0
+                        ) {
+
+                            $.ajax({
+                                url: "http://localhost:50001?gui=json",
+                                type: "POST",
+                                contentType: "application/json; charset=utf-8",
+                                // dataType: "text/turtle",
+                                data: JSON.stringify({
+                                    "data": {
+                                        "files": data_files, 
+                                        "urls": data_list
+                                    }, 
+                                    "rules": {
+                                        "files": rule_files, 
+                                        "urls": rule_list
+                                    }, 
+                                    "queries": {
+                                        "files": query_files, 
+                                        "urls": query_list
+                                    }
+                                }),
+                                xhrFields: {
+                                    responseType: "blob" // ???
+                                },
+                                // Trick to initiate Save as dialog
+                                success: function(res) {
+                                    var a = document.createElement("a");
+                                    var url = window.URL.createObjectURL(res);
+                                    var now = new Date();
+                                    var timeString = now.getFullYear().toString() 
+                                        + (now.getMonth() +1).toString() 
+                                        + now.getDate().toString() 
+                                        + now.getHours().toString() 
+                                        + now.getMinutes().toString(); 
+                                    a.href = url;
+                                    a.download = "reasoning_" + timeString + ".ttl";
+                                    document.body.append(a);
+                                    a.click();
+                                    a.remove();
+                                    window.URL.revokeObjectURL(url);
+                                },
+                                // success: function(response) {
+                                //     console.log("Success:")
+                                //     console.log(response)
+                                //     $("#output").text(response);
+                                // },
+                                error: function(error) {
+                                    console.log("Error:")
+                                    console.log(error);
+                                }
+                            });
+
+                    } else {
+                        $("#output").text("Data/Rule/Query missing");
+                    }
                 });
             });
 
