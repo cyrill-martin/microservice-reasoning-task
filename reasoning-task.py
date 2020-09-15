@@ -15,7 +15,7 @@ from flask import Flask, request, render_template, flash, redirect, url_for, mak
 UPLOAD_FOLDER = "uploads"
 JSON_TEMPLATE = "json_template.html"
 FORM_TEMPLATE = "form_template.html"
-ALLOWED_EXTENSIONS = {"n3", "ttl"}
+ALLOWED_EXTENSIONS = {"n3", "ttl", "nt"}
 
 # Create app with CORS enabled
 app = Flask(__name__)
@@ -57,7 +57,8 @@ def create_input_files(input_list, target_container, error_container, message_pa
             f.write(file["content"])
             f.close()
         else:
-            error_container.append("{}: upload .ttl and/or .n3 files only".format(message_part))
+            list_of_files = [str(s) for s in ALLOWED_EXTENSIONS]
+            error_container.append("{}: upload {} files only".format(message_part, " / ".join(list_of_files)))
 
 # Function to process files POSTed in FileList
 def take_input_files(input_list, target_container, error_container, message_part): 
@@ -123,7 +124,7 @@ def reason(data_input, rule_input, query_input, **kwargs):
         # return process.stderr
 
         if kwargs["gui"] == True: 
-            return render_template(TEMPLATE, output=process.stderr)
+            return render_template(kwargs["template"], output=process.stderr)
         else: 
             return jsonify(process.stderr)
 
@@ -244,7 +245,11 @@ def reasoningtask():
             ###################
             # START REASONING #
             ###################
-            reasoning = reason(data_input, rule_input, query_input, gui=gui)
+            if gui:
+                reasoning = reason(data_input, rule_input, query_input, gui=gui, template=TEMPLATE)
+            else:
+                reasoning = reason(data_input, rule_input, query_input)
+
             return reasoning
 
         #######################################
@@ -364,7 +369,11 @@ def reasoningtask():
                 ###################
                 # START REASONING #
                 ###################
-                reasoning = reason(data_input, rule_input, query_input, gui=gui)
+                if gui:
+                    reasoning = reason(data_input, rule_input, query_input, gui=gui, template=TEMPLATE)
+                else:
+                    reasoning = reason(data_input, rule_input, query_input)
+
                 return reasoning
 
     # GET

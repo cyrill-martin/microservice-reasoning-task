@@ -62,14 +62,14 @@
 
         <script>
             // Containers for posting stringyfied files
-            var data_files = [];
-            var data_list = [];
+            let data_files = [];
+            let data_list = [];
 
-            var rule_files = [];
-            var rule_list = [];
+            let rule_files = [];
+            let rule_list = [];
 
-            var query_files = [];
-            var query_list = [];
+            let query_files = [];
+            let query_list = [];
 
             function readFile(file, onLoadCallback) {
                 
@@ -84,9 +84,17 @@
                 reader.readAsText(file);
             };
 
+            // function showFileList(list, ary, idstr) {
+            //     list.innerHTML = ary.map((object, index) => ([
+            //         "<div class='file_chip'" + "id='" + idstr + "_" + index + "'>"
+            //             + object.file 
+            //             + "<span class='remove_btn'>&times;</span>"
+            //             + "</div>"])).join("");
+            // };
+
             function updateFiles(input, output, target) {
                 const myFiles = document.getElementById(input);
-                const myList = document.getElementById(output);
+                let myList = document.getElementById(output);
                 const fileList = myFiles.files;
 
                 // console.log(fileList);
@@ -124,48 +132,68 @@
                 };
 
                 if (target === "data") {
-                    myList.innerHTML = data_files.map((object, index) => ([
-                        "<div class='file_chip'" + "id='dat_" + index + "'>"
+                    // showFileList(myList, data_files, "dat");
+                    myList.innerHTML = data_files.map((object) => ([
+                        "<div class='file_chip' data-type='data'>"
                         + object.file 
                         + "<span class='remove_btn'>&times;</span>"
                         + "</div>"])).join("");
                 } else if (target === "rule") {
-                    myList.innerHTML = rule_files.map((object, index) => ([
-                        "<div class='file_chip'" + "id='rle_" + index + "'>" 
+                    // showFileList(myList, rule_files, "rle");
+                    myList.innerHTML = rule_files.map((object) => ([
+                        "<div class='file_chip' data-type='rule'>" 
                         + object.file 
                         + "<span class='remove_btn'>&times;</span>"
                         + "</div>"])).join("");
                 } else {
-                     myList.innerHTML = query_files.map((object, index) => ([
-                        "<div class='file_chip'" + "id='qry_" + index + "'>" 
+                    // showFileList(myList, query_files, "qry");
+                     myList.innerHTML = query_files.map((object) => ([
+                        "<div class='file_chip' data-type='query'>" 
                         + object.file 
                         + "<span class='remove_btn'>&times;</span>"
                         + "</div>"])).join("");
                 }
 
+
+                console.log("Data files:");
                 console.log(data_files);
+                console.log("Rule files:");
                 console.log(rule_files);
+                console.log("Query files:");
                 console.log(query_files);
 
                 $(".remove_btn").click(function() {
-                    let type = $(this).parent().attr("id").slice(0,3);
-                    let index = $(this).parent().attr("id").slice(4,99);
+                    let type = $(this).parent().attr("data-type");
+                    // let index = $(this).parent().attr("id").slice(4,99);
+                    let filename = $(this).parent().text().slice(0,-1);
+                    console.log(filename);
+                    // console.log("#" + type + "_" + index);
 
-                    console.log(type + "_" + index);
-
-                    if (type === "dat") {
-                        data_files.splice(index, 1);
-                    } else if (type == "rle") {
-                        rule_files.splice(index, 1);
+                    if (type === "data") {
+                        data_files = data_files.filter(function(obj) {
+                            return obj.file !== filename;
+                        })
+                        // data_files.splice(index, 1);
+                    } else if (type == "rule") {
+                        rule_files = rule_files.filter(function(obj) {
+                            return obj.file !== filename;
+                        })
+                        // rule_files.splice(index, 1);
                     } else {
-                        query_files.splice(index, 1);
+                        query_files = query_files.filter(function(obj) {
+                            return obj.file !== filename;
+                        })
+                        // query_files.splice(index, 1);
                     }
 
+                    console.log("Data files:");
                     console.log(data_files);
+                    console.log("Rule files:");
                     console.log(rule_files);
+                    console.log("Query files:");
                     console.log(query_files);
 
-                    $("#" + type + "_" + index).remove();
+                    $(this).parent().remove();
 
                 });
 
@@ -221,10 +249,10 @@
                                 },
                                 // Trick to initiate Save as dialog
                                 success: function(res) {
-                                    var a = document.createElement("a");
-                                    var url = window.URL.createObjectURL(res);
-                                    var now = new Date();
-                                    var timeString = now.getFullYear().toString() 
+                                    let a = document.createElement("a");
+                                    let url = window.URL.createObjectURL(res);
+                                    let now = new Date();
+                                    let timeString = now.getFullYear().toString() 
                                         + (now.getMonth() +1).toString() 
                                         + now.getDate().toString() 
                                         + now.getHours().toString() 
