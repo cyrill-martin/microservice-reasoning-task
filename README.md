@@ -2,14 +2,16 @@
 
 This microservice is part of the microservice pipline in [inseri](https://github.com/nie-ine/inseri). The service provides the possibility to conduct machine reasoning using the [EYE reasoner](http://sourceforge.net/projects/eulersharp/files/eulersharp/).
 
-The microservice accepts both a FileList object sent through an HTML form or JSON data of the files contents. 
+The microservice accepts both a FileList object sent through an HTML form or JSON data of the file's names and contents.
+
+There's an inseri app to select files locally and send them to the microservice but the service also provides its own HTML interface to select files for a reasoning session.
 
 ## Run and Develop Locally
 
 ### Dependencies
 
-1. Linux
-2. python3
+1. Ubuntu 18.04
+2. Python 3
 3. packages: see requirements.txt
 4. Local installation of the EYE reasoner (located in /opt/eye/bin/eye.sh) and its dependencies
    - swipl
@@ -19,8 +21,10 @@ The microservice accepts both a FileList object sent through an HTML form or JSO
 
 ### Install and Run
 
-1. ``pip3 install -r requirements.txt``
-2. start with ``python3 reasoning-task.py``
+1. Clone the repository
+1. cd into the repository
+1. Run ``pip3 install -r requirements.txt`` to fetch the needed Python packages (you might want to do this within a virtual Python environment)
+2. Run ``python3 reasoning-task.py`` to start the service
 1. POST FileList object or JSON to http://localhost:50001 (see below)
 3. Or use the GUI to create the POST by opening:  
    - http://localhost:50001 for sending a FileList object
@@ -46,65 +50,8 @@ Currently, please use the GUI interface and the developer tools to get an idea o
 
 ### JSON
 
-Body:
-```
-{
-    "data": {
-        "files": [
-            {
-                "file": "...",
-                "content": "..."
-            },
-            {
-                "file": "...",
-                "content": "..."
-            }
-        ],
-        "urls": [
-            "...",
-            "...",
-            "..."
-        ]
-    },
+Body, e.g.:
 
-    "rules": {
-        "files": [
-            {
-                "file": "...",
-                "content": "..."
-            },
-            {
-                "file": "...",
-                "content": "..."
-            }
-        ],
-        "urls": [
-            "...",
-            "...",
-            "..."
-        ]
-    },
-    "queries": {
-        "files": [
-            {
-                "file": "...",
-                "content": "..."
-            },
-            {
-                "file": "...",
-                "content": "..."
-            }
-        ],
-        "urls": [
-            "...",
-            "...",
-            "..."
-        ]
-    }
-}
-```
-
-E.g.:
 ```
 {
     "data": {
@@ -125,7 +72,6 @@ E.g.:
             }
         ],
         "urls": [
-
         ]
     },
     "queries": {
@@ -143,5 +89,5 @@ E.g.:
 
 ## Publish on Dockerhub
 
-1. Build the image: ``[sudo] docker build -t nieine/nieine/microservice-reasoning-task:YYYY-MM-DD .``
-1. Push the image: ``[sudo] docker push nieine/nieine/microservice-reasoning-task:YYYY-MM-DD``
+1. Build the image: ``[sudo] docker build -t nieine/microservice-reasoning-task:YYYY-MM-DD .``
+1. Push the image: ``[sudo] docker push nieine/microservice-reasoning-task:YYYY-MM-DD``

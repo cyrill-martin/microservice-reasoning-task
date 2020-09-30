@@ -58,7 +58,7 @@ def create_input_files(input_list, target_container, error_container, message_pa
             f.close()
         else:
             list_of_files = [str(s) for s in ALLOWED_EXTENSIONS]
-            error_container.append("{}: upload {} files only".format(message_part, " / ".join(list_of_files)))
+            error_container.append("{}: upload {} files only".format(message_part, "/".join(list_of_files)))
 
 # Function to process files POSTed in FileList
 def take_input_files(input_list, target_container, error_container, message_part): 
@@ -69,7 +69,7 @@ def take_input_files(input_list, target_container, error_container, message_part
             target_container.append(filename)
             file.save(os.path.join(UPLOAD_FOLDER, filename))
         else:
-            error_container.append("{}: upload .ttl and/or .n3 files only".format(message_part))
+            error_container.append("{}: upload {} files only".format(message_part, "/".join(list_of_files)))
 
 # Function to create URL list based on POSTed JSON data 
 def create_input_urls(input_list, target_container, error_container, message):
@@ -121,8 +121,7 @@ def reason(data_input, rule_input, query_input, **kwargs):
         # Delete upload folder and files
         shutil.rmtree(UPLOAD_FOLDER)
 
-        # return process.stderr
-
+        # return output
         if kwargs["gui"] == True: 
             return render_template(kwargs["template"], output=process.stderr)
         else: 
@@ -187,7 +186,7 @@ def reasoningtask():
                 if gui == True:
                     return "\n".join(check_parts)
                 else:  
-                    return jsonify("\n".join(check_parts))
+                    return jsonify("EYE Reasoner: " + " | ".join(check_parts))
 
             # Containers for input files
             data_input = []
@@ -228,7 +227,7 @@ def reasoningtask():
                 if gui == True: 
                     return "\n".join(check_names)
                 else: 
-                    return jsonify("\n".join(check_names))
+                    return jsonify("EYE Reasoner: " + " | ".join(check_names))
 
             # Exit if there are invalid URLs
             if check_urls:
@@ -236,7 +235,7 @@ def reasoningtask():
                 if gui == True: 
                     return "\n".join(check_urls)
                 else: 
-                    return jsonify("\n".join(check_urls))
+                    return jsonify("EYE Reasoner: " + " | ".join(check_urls))
 
             if query_input:
                 # Add the needed parameter for the reasoner
@@ -279,7 +278,7 @@ def reasoningtask():
                 if gui == True: 
                     return render_template(FORM_TEMPLATE, output="\n".join(check_parts))
                 else: 
-                    return "\n".join(check_parts)
+                    return "EYE Reasoner: " + " | ".join(check_parts)
 
             # Get the file lists
             data_files = request.files.getlist("upl_data")
@@ -313,11 +312,10 @@ def reasoningtask():
                 if gui == True: 
                     return render_template(FORM_TEMPLATE, output="\n".join(check_files))
                 else: 
-                    return "\n".join(check_files)
+                    return "EYE Reasoner: " + " | ".join(check_files)
             else:
                 # Facts and rules are present
                 check_names = []
-                name_error = "upload .ttl and/or .n3 files only"
                 check_urls = []
 
                 data_input = []
@@ -353,14 +351,14 @@ def reasoningtask():
                     if gui == True: 
                         return render_template(FORM_TEMPLATE, output="\n".join(check_names))
                     else: 
-                        return "\n".join(check_names)
+                        return "EYE Reasoner: " + " | ".join(check_names)
 
                 # Exit if there are invalid URLs
                 if check_urls:
                     if gui == True: 
                         return render_template(FORM_TEMPLATE, output="\n".join(check_urls))
                     else:
-                        return "\n".join(check_names)
+                        return "EYE Reasoner: " + " | ".join(check_names)
 
                 if query_input:
                     # Add the needed parameter for the reasoner
