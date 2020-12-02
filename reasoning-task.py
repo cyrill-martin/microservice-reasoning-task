@@ -32,16 +32,9 @@ def allowed_file(filename):
     return "." in filename and \
         filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# def valid_url(url):
-#     valid = validators.url(url)
-#     if valid == True:
-#         return True
-#     else:
-#         return False
-
 # Function to check URLs
 def valid_url(url):
-    return validators.url(url) # Same as above: returns True if valid :)
+    return validators.url(url) # returns True if valid
 
 # Function to process 'files' POSTed as JSON data
 def create_input_files(input_list, target_container, error_container, message_part): 
@@ -160,7 +153,7 @@ def reasoningtask():
             # List for error messages
             check_parts = []
 
-            # Check JSON structure !!!
+            # You might want to check the the JSON structure!
 
             # Check if there are data files or URLs
             if not req["data"]["files"] and not req["data"]["urls"]: 
@@ -240,16 +233,6 @@ def reasoningtask():
             if query_input:
                 # Add the needed parameter for the reasoner
                 query_input.insert(0, "--query")
-
-            ###################
-            # START REASONING #
-            ###################
-            if gui:
-                reasoning = reason(data_input, rule_input, query_input, gui=gui, template=TEMPLATE)
-            else:
-                reasoning = reason(data_input, rule_input, query_input)
-
-            return reasoning
 
         #######################################
         ######### if POST is FileList #########
@@ -364,15 +347,15 @@ def reasoningtask():
                     # Add the needed parameter for the reasoner
                     query_input.insert(0, "--query")
 
-                ###################
-                # START REASONING #
-                ###################
-                if gui:
-                    reasoning = reason(data_input, rule_input, query_input, gui=gui, template=TEMPLATE)
-                else:
-                    reasoning = reason(data_input, rule_input, query_input)
+        ###################
+        # START REASONING #
+        ###################
+        if gui:
+            reasoning = reason(data_input, rule_input, query_input, gui=gui, template=TEMPLATE)
+        else:
+            reasoning = reason(data_input, rule_input, query_input)
 
-                return reasoning
+        return reasoning
 
     # GET
     else:
